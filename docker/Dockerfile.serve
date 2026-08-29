@@ -1,0 +1,15 @@
+FROM python:3.11-slim
+WORKDIR /app
+COPY requirements/serve.txt .
+RUN pip install --no-cache-dir -r serve.txt && \
+    useradd -m -u 1000 appuser
+
+COPY src/ ./src/
+USER appuser
+EXPOSE 8080
+ENV PYTHONUNBUFFERED=1
+
+HEALTHCHECK --interval=10s --timeout=3s --retries=3 \
+  CMD curl -f http://localhost:8080/health || exit 1
+
+ENTRYPOINT ["uvicorn", "src.serve:app", "--host", "0.0.0.0", "--port", "8080"]
