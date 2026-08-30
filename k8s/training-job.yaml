@@ -1,0 +1,39 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: pytorch-training-job
+  namespace: ml-training
+spec:
+  template:
+    metadata:
+      labels:
+        app: pytorch-training
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: training-container
+        image: mlops-train:v1
+        imagePullPolicy: IfNotPresent
+        resources:
+          requests:
+            cpu: "500m"
+            memory: "1Gi"
+          limits:
+            cpu: "2"
+            memory: "2Gi"
+        volumeMounts:
+        - name: config-volume
+          mountPath: /app/configs
+        - name: storage-volume
+          mountPath: /app/data
+          subPath: data
+        - name: storage-volume
+          mountPath: /app/checkpoints
+          subPath: checkpoints
+      volumes:
+      - name: config-volume
+        configMap:
+          name: training-config
+      - name: storage-volume
+        persistentVolumeClaim:
+          claimName: mlops-pvc
